@@ -1,6 +1,7 @@
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import Avatar from '../components/Avatar';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -65,6 +66,12 @@ const DashboardPage = () => {
               >
                 {user.fullName?.charAt(0).toUpperCase() || 'U'}
               </div>
+              <Avatar
+                src={user.avatar || '/default-avatar.png'}
+                alt={user.fullName}
+                fallbackText={user.fullName.charAt(0).toUpperCase()}
+                size={40}
+              />
             </div>
             <div className="user-details">
               <h3>{user.fullName}</h3>

@@ -1,9 +1,24 @@
-import express from "express"
-import cors from "cors"
-import cookieParser from "cookie-parser"
+// src/app.js
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import http from "http";
+import { Server as IOServer } from "socket.io";
 
-const app = express()
+// Import models (fixed)
+import db from "./models/index.js"; // adjust path if needed
+const { meet: Meet, session: Session } = db;
 
+// Import routes
+import userRouter from "./routes/user.routes.js";
+import healthcheckRouter from "./routes/healthcheck.routes.js";
+import meetRouter from "./routes/meet.js";
+import sessionRouter from "./routes/session.js";
+
+const app = express();
+
+// Middleware
 app.use(cors({
     origin: process.env.CORS_ORIGIN,
     credentials: true

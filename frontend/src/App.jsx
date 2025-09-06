@@ -8,6 +8,7 @@ import WorkspaceDashboard from './components/WorkspaceDashboard';
 import DocumentEditor from './components/DocumentEditor';
 import KanbanBoard from './components/KanbanBoard';
 import GanttChart from './components/GanttChart';
+import Meet from './pages/meet';
 import ProtectedRoute from './components/ProtectedRoute';
 // import './App.css';
 
@@ -83,6 +84,30 @@ function App() {
           </div>
         </Router>
       </WorkspaceProvider>
+      <Router>
+        <div className="App">
+          <Routes>
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signup" element={<SignupPage />} />
+            <Route 
+              path="/dashboard" 
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/meet" 
+              element={
+                  <Meet />
+              } 
+            />
+            <Route path="*" element={<Navigate to="/dashboard" replace />} />
+          </Routes>
+        </div>
+      </Router>
     </AuthProvider>
   );
 }
