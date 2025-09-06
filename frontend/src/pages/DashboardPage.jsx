@@ -1,6 +1,7 @@
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
+import Avatar from '../components/Avatar';
 import './DashboardPage.css';
 
 const DashboardPage = () => {
@@ -38,12 +39,11 @@ const DashboardPage = () => {
           <h1>Welcome to Collab Platform</h1>
           <div className="user-info">
             <div className="user-avatar">
-              <img 
-                src={user.avatar || '/default-avatar.png'} 
+              <Avatar
+                src={user.avatar || '/default-avatar.png'}
                 alt={user.fullName}
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/40x40/667eea/ffffff?text=' + user.fullName.charAt(0).toUpperCase();
-                }}
+                fallbackText={user.fullName.charAt(0).toUpperCase()}
+                size={40}
               />
             </div>
             <div className="user-details">

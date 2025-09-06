@@ -4,8 +4,9 @@ import { useAuth } from '../hooks/useAuth';
 import './AuthPages.css';
 
 const SimpleSignupPage = () => {
-  const { register: registerUser, loading, error, setError } = useAuth();
+  const { signup, loading } = useAuth();
   const navigate = useNavigate();
+  const [error, setError] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(null);
   const [coverImagePreview, setCoverImagePreview] = useState(null);
   const [formData, setFormData] = useState({
@@ -64,19 +65,13 @@ const SimpleSignupPage = () => {
       return;
     }
 
-    const userData = {
-      fullName: formData.fullName,
-      email: formData.email,
-      username: formData.username,
-      password: formData.password,
-      avatar: formData.avatar,
-      coverImage: formData.coverImage
-    };
-
-    const result = await registerUser(userData);
+    // The signup function expects name, email, password as separate parameters
+    const result = await signup(formData.fullName, formData.email, formData.password);
     
     if (result.success) {
       navigate('/dashboard');
+    } else {
+      setError(result.error || 'Signup failed. Please try again.');
     }
   };
 

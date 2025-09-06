@@ -4,9 +4,10 @@ import { useAuth } from '../hooks/useAuth';
 import './AuthPages.css';
 
 const SimpleLoginPage = () => {
-  const { login, loading, error, setError } = useAuth();
+  const { login, loading } = useAuth();
   const navigate = useNavigate();
   const [loginMethod, setLoginMethod] = useState('email');
+  const [error, setError] = useState(null);
   const [formData, setFormData] = useState({
     email: '',
     username: '',
@@ -25,10 +26,11 @@ const SimpleLoginPage = () => {
     e.preventDefault();
     setError(null);
     
+    // Create credentials object based on login method
     const credentials = {
-      password: formData.password,
+      password: formData.password
     };
-
+    
     if (loginMethod === 'email') {
       credentials.email = formData.email;
     } else {
@@ -39,6 +41,8 @@ const SimpleLoginPage = () => {
     
     if (result.success) {
       navigate('/dashboard');
+    } else {
+      setError(result.error || 'Login failed. Please try again.');
     }
   };
 
