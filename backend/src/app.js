@@ -21,7 +21,6 @@ const app = express();
 // Middleware
 app.use(cors({
   origin: process.env.CORS_ORIGIN || "*",
-  credentials: true
 }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -38,8 +37,7 @@ app.use("/session", sessionRouter);
 const httpServer = http.createServer(app);
 const io = new IOServer(httpServer, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST"],
+    origin: process.env.CORS_ORIGIN || "*",
   },
 });
 
