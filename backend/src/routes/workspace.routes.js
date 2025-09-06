@@ -7,7 +7,7 @@ import {
   inviteToWorkspace,
   removeFromWorkspace,
   deleteWorkspace
-} from "../controllers/workspace.controller.js";
+} from "../controller/workspace.controller.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 
 const router = Router();
