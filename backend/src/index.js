@@ -2,16 +2,34 @@
 import dotenv from "dotenv"
 import connectDB from "./db/index.js";
 import {app} from './app.js'
+import { createServer } from 'http';
+import { Server } from 'socket.io';
+import { setupSocketIO } from './utils/socketHandler.js';
+
 dotenv.config({
     path: './.env.local'
 })
 
+// Create HTTP server
+const server = createServer(app);
 
+// Setup Socket.IO
+const io = new Server(server, {
+    cors: {
+        origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+        methods: ["GET", "POST"],
+        credentials: true
+    }
+});
+
+// Setup socket handlers
+setupSocketIO(io);
 
 connectDB()
 .then(() => {
-    app.listen(process.env.PORT || 8000, () => {
+    server.listen(process.env.PORT || 8000, () => {
         console.log(`⚙️ Server is running at port : ${process.env.PORT}`);
+        console.log(`🔌 Socket.IO server is ready for real-time connections`);
     })
 })
 .catch((err) => {

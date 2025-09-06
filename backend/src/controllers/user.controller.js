@@ -8,19 +8,27 @@ import mongoose from "mongoose";
 
 
 const generateAccessAndRefereshTokens = async(userId) =>{
-    try {
-        const user = await User.findById(userId)
-        const accessToken = user.generateAccessToken()
-        const refreshToken = user.generateRefreshToken()
+     try {
+        const user = await User.findById(userId);
+        if (!user) {
+            // If user is not found, throw a specific error
+            throw new ApiError(404, "User not found while trying to generate tokens");
+        }
 
-        user.refreshToken = refreshToken
-        await user.save({ validateBeforeSave: false })
+        const accessToken = user.generateAccessToken();
+        const refreshToken = user.generateRefreshToken();
 
-        return {accessToken, refreshToken}
+        user.refreshToken = refreshToken;
+        await user.save({ validateBeforeSave: false });
 
+        return {accessToken, refreshToken};
 
     } catch (error) {
-        throw new ApiError(500, "Something went wrong while generating referesh and access token")
+        // Log the actual, underlying error to the console for debugging
+        console.error("Error details in generateAccessAndRefereshTokens:", error);
+        
+        // Throw a standardized error to the client
+        throw new ApiError(500, error.message || "Something went wrong while generating refresh and access tokens");
     }
 }
 
@@ -50,16 +58,18 @@ const registerUser = asyncHandler( async (req, res) => {
     })
 
     if (existedUser) {
-        throw new ApiError(409, "User with email or username already exists")
+        // throw new ApiError(409, "User with email or username already exists")
+        return res.status(409).json(new ApiResponse(409, null, "User with email or username already exists"));
     }
-    //console.log(req.files);
+    console.log("req.files:", req.files);
 
     const avatarLocalPath = req.files?.avatar[0]?.path;
-    //const coverImageLocalPath = req.files?.coverImage[0]?.path;
+    console.log("avatarLocalPath:", avatarLocalPath);
 
     let coverImageLocalPath;
     if (req.files && Array.isArray(req.files.coverImage) && req.files.coverImage.length > 0) {
         coverImageLocalPath = req.files.coverImage[0].path
+        console.log("coverImageLocalPath:", coverImageLocalPath);
     }
     
 
@@ -133,7 +143,13 @@ const loginUser = asyncHandler(async (req, res) =>{
     throw new ApiError(401, "Invalid user credentials")
     }
 
-   const {accessToken, refreshToken} = await generateAccessAndRefereshTokens(user._id)
+   const tokenResult = await generateAccessAndRefereshTokens(user._id)
+   
+   if (!tokenResult || !tokenResult.accessToken || !tokenResult.refreshToken) {
+       throw new ApiError(500, "Failed to generate authentication tokens")
+   }
+   
+   const {accessToken, refreshToken} = tokenResult
 
     const loggedInUser = await User.findById(user._id).select("-password -refreshToken")
 
@@ -212,7 +228,13 @@ const refreshAccessToken = asyncHandler(async (req, res) => {
             secure: true
         }
     
-        const {accessToken, newRefreshToken} = await generateAccessAndRefereshTokens(user._id)
+        const tokenResult = await generateAccessAndRefereshTokens(user._id)
+        
+        if (!tokenResult || !tokenResult.accessToken || !tokenResult.refreshToken) {
+            throw new ApiError(500, "Failed to generate tokens")
+        }
+        
+        const {accessToken, refreshToken: newRefreshToken} = tokenResult
     
         return res
         .status(200)

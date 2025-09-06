@@ -38,13 +38,33 @@ const DashboardPage = () => {
           <h1>Welcome to Collab Platform</h1>
           <div className="user-info">
             <div className="user-avatar">
-              <img 
-                src={user.avatar || '/default-avatar.png'} 
-                alt={user.fullName}
-                onError={(e) => {
-                  e.target.src = 'https://via.placeholder.com/40x40/667eea/ffffff?text=' + user.fullName.charAt(0).toUpperCase();
+              {user.avatar ? (
+                <img 
+                  src={user.avatar} 
+                  alt={user.fullName}
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                    e.target.nextSibling.style.display = 'flex';
+                  }}
+                />
+              ) : null}
+              <div 
+                className="avatar-fallback"
+                style={{
+                  display: user.avatar ? 'none' : 'flex',
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '50%',
+                  backgroundColor: '#667eea',
+                  color: 'white',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '16px',
+                  fontWeight: 'bold'
                 }}
-              />
+              >
+                {user.fullName?.charAt(0).toUpperCase() || 'U'}
+              </div>
             </div>
             <div className="user-details">
               <h3>{user.fullName}</h3>
