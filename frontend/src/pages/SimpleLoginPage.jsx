@@ -1,33 +1,38 @@
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import './AuthPages.css';
 
-const LoginPage = () => {
+const SimpleLoginPage = () => {
   const { login, loading, error, setError } = useAuth();
   const navigate = useNavigate();
-  const [loginMethod, setLoginMethod] = useState('email'); // 'email' or 'username'
+  const [loginMethod, setLoginMethod] = useState('email');
+  const [formData, setFormData] = useState({
+    email: '',
+    username: '',
+    password: ''
+  });
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    // watch,
-  } = useForm();
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
 
-  const onSubmit = async (data) => {
+  const onSubmit = async (e) => {
+    e.preventDefault();
     setError(null);
     
     const credentials = {
-      password: data.password,
+      password: formData.password,
     };
 
-    // Add either email or username based on user input
     if (loginMethod === 'email') {
-      credentials.email = data.email;
+      credentials.email = formData.email;
     } else {
-      credentials.username = data.username;
+      credentials.username = formData.username;
     }
 
     const result = await login(credentials);
@@ -56,7 +61,7 @@ const LoginPage = () => {
           </div>
         )}
 
-        <form onSubmit={handleSubmit(onSubmit)} className="auth-form">
+        <form onSubmit={onSubmit} className="auth-form">
           <div className="login-method-toggle">
             <button
               type="button"
@@ -80,19 +85,12 @@ const LoginPage = () => {
               <input
                 type="email"
                 id="email"
-                {...register('email', {
-                  required: 'Email is required',
-                  pattern: {
-                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                    message: 'Invalid email address',
-                  },
-                })}
-                className={errors.email ? 'error' : ''}
+                name="email"
+                value={formData.email}
+                onChange={handleInputChange}
                 placeholder="Enter your email"
+                required
               />
-              {errors.email && (
-                <span className="field-error">{errors.email.message}</span>
-              )}
             </div>
           ) : (
             <div className="form-group">
@@ -100,19 +98,12 @@ const LoginPage = () => {
               <input
                 type="text"
                 id="username"
-                {...register('username', {
-                  required: 'Username is required',
-                  minLength: {
-                    value: 3,
-                    message: 'Username must be at least 3 characters',
-                  },
-                })}
-                className={errors.username ? 'error' : ''}
+                name="username"
+                value={formData.username}
+                onChange={handleInputChange}
                 placeholder="Enter your username"
+                required
               />
-              {errors.username && (
-                <span className="field-error">{errors.username.message}</span>
-              )}
             </div>
           )}
 
@@ -121,15 +112,12 @@ const LoginPage = () => {
             <input
               type="password"
               id="password"
-              {...register('password', {
-                required: 'Password is required',
-              })}
-              className={errors.password ? 'error' : ''}
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
               placeholder="Enter your password"
+              required
             />
-            {errors.password && (
-              <span className="field-error">{errors.password.message}</span>
-            )}
           </div>
 
           <div className="form-options">
@@ -165,4 +153,4 @@ const LoginPage = () => {
   );
 };
 
-export default LoginPage;
+export default SimpleLoginPage;
