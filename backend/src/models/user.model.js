@@ -16,7 +16,7 @@ const userSchema = new Schema(
             type: String,
             required: true,
             unique: true,
-            lowecase: true,
+            lowercase: true, // Fixed typo: was "lowecase"
             trim: true, 
         },
         fullName: {
@@ -24,6 +24,10 @@ const userSchema = new Schema(
             required: true,
             trim: true, 
             index: true
+        },
+        avatar: {
+            type: String, // cloudinary url - MISSING FIELD ADDED
+            required: true,
         },
         coverImage: {
             type: String, // cloudinary url

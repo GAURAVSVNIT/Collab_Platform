@@ -15,7 +15,7 @@ export const AuthProvider = ({ children }) => {
   const checkAuthStatus = async () => {
     try {
       const response = await authAPI.getCurrentUser();
-      if (response.data.success) {
+      if (response.data.statusCode === 200) {
         setUser(response.data.data);
       }
     } catch {
@@ -31,7 +31,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authAPI.login(credentials);
       
-      if (response.data.success) {
+      if (response.data.statusCode === 200) {
         setUser(response.data.data.user);
         return { success: true, data: response.data.data };
       }
@@ -50,7 +50,7 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       const response = await authAPI.register(userData);
       
-      if (response.data.success) {
+      if (response.data.statusCode === 200) {
         setUser(response.data.data);
         return { success: true, data: response.data.data };
       }
