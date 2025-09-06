@@ -1,42 +1,117 @@
-import express from "express"
-import cors from "cors"
-import cookieParser from "cookie-parser"
+// src/app.js
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import bodyParser from "body-parser";
+import http from "http";
+import { Server as IOServer } from "socket.io";
 
-const app = express()
+// Import models (fixed)
+import db from "./models/index.js"; // adjust path if needed
+const { meet: Meet, session: Session } = db;
 
+// Import routes
+import userRouter from "./routes/user.routes.js";
+import healthcheckRouter from "./routes/healthcheck.routes.js";
+import meetRouter from "./routes/meet.js";
+import sessionRouter from "./routes/session.js";
+
+const app = express();
+
+// Middleware
 app.use(cors({
-    origin: process.env.CORS_ORIGIN,
-    credentials: true
-}))
+  origin: process.env.CORS_ORIGIN || "*",
+  credentials: true
+}));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.static("public"));
+app.use(cookieParser());
 
-app.use(express.json({limit: "16kb"}))
-app.use(express.urlencoded({extended: true, limit: "16kb"}))
-app.use(express.static("public"))
-app.use(cookieParser())
+// Routers
+app.use("/users", userRouter);
+app.use("/health", healthcheckRouter);
+app.use("/meet", meetRouter);
+app.use("/session", sessionRouter);
 
+// HTTP + Socket.IO server
+const httpServer = http.createServer(app);
+const io = new IOServer(httpServer, {
+  cors: {
+    origin: "*",
+    methods: ["GET", "POST"],
+  },
+});
 
-//routes import
-import userRouter from './routes/user.routes.js'
-import healthcheckRouter from "./routes/healthcheck.routes.js"
-import tweetRouter from "./routes/tweet.routes.js"
-import subscriptionRouter from "./routes/subscription.routes.js"
-import videoRouter from "./routes/video.routes.js"
-import commentRouter from "./routes/comment.routes.js"
-import likeRouter from "./routes/like.routes.js"
-import playlistRouter from "./routes/playlist.routes.js"
-import dashboardRouter from "./routes/dashboard.routes.js"
+// Socket.IO events
+io.on("connection", (socket) => {
+  console.log("New socket connected:", socket.id);
 
-//routes declaration
-app.use("/api/v1/healthcheck", healthcheckRouter)
-app.use("/api/v1/users", userRouter)
-app.use("/api/v1/tweets", tweetRouter)
-app.use("/api/v1/subscriptions", subscriptionRouter)
-app.use("/api/v1/videos", videoRouter)
-app.use("/api/v1/comments", commentRouter)
-app.use("/api/v1/likes", likeRouter)
-app.use("/api/v1/playlist", playlistRouter)
-app.use("/api/v1/dashboard", dashboardRouter)
+  // Join meeting
+  socket.on("joined", async (data) => {
+    try {
+      const { meetingid, username } = JSON.parse(data);
+      if (!meetingid) return;
 
-// http://localhost:8000/api/v1/users/register
+      // Join the room
+      socket.join(meetingid);
 
-export { app }
+      // Notify others in the room
+      socket.to(meetingid).emit("joined", socket.id);
+
+      // Optional: save meet to DB
+      // await Meet.create({ name: username || "User", meetingid, sessionid: socket.id });
+    } catch (err) {
+      console.error("Error in joined:", err);
+    }
+  });
+
+  // WebRTC offer
+  socket.on("offer_message", (data) => {
+    try {
+      const { offerto } = JSON.parse(data);
+      if (!offerto) return;
+      io.to(offerto).emit("offer_message", data);
+    } catch (err) {
+      console.error("Error in offer_message:", err);
+    }
+  });
+
+  // WebRTC answer
+  socket.on("answer_message", (data) => {
+    try {
+      const { offerto } = JSON.parse(data);
+      if (!offerto) return;
+      io.to(offerto).emit("answer_message", data);
+    } catch (err) {
+      console.error("Error in answer_message:", err);
+    }
+  });
+
+  // Chat message
+  socket.on("send", (data) => {
+    try {
+      const { meetingid, sessionid } = JSON.parse(data);
+      if (!meetingid) return;
+      socket.join(meetingid);
+      socket.to(meetingid).emit("sendmessage", sessionid);
+    } catch (err) {
+      console.error("Error in send:", err);
+    }
+  });
+
+  // Disconnect
+  socket.on("disconnecting", () => {
+    socket.rooms.forEach((room) => {
+      socket.to(room).emit("exitmeeting", "someone has exited");
+    });
+  });
+});
+
+// Listening port
+const PORT = process.env.PORT || 8000;
+httpServer.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
+});
+
+export { app, io };
